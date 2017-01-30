@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -33,6 +27,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * Test for https://issues.apache.org/jira/browse/AMQ-6561 to make sure sockets
@@ -105,7 +104,7 @@ public class TcpTransportCloseSocketTest {
         factory.setBrokerURL(uri);
         factory.setClientID("id");
 
-        TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByName("tcp").getServer();
+        final TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByName("tcp").getServer();
 
         //Try and create 2 connections, the second should fail because of a duplicate clientId
         int failed = 0;

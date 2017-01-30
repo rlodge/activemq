@@ -16,23 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.File;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -48,6 +31,22 @@ import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QueuePurgeTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(QueuePurgeTest.class);
@@ -191,9 +190,9 @@ public class QueuePurgeTest extends CombinationTestSupport {
     private void testConcurrentPurgeAndSend(boolean prioritizedMessages) throws Exception {
         applyBrokerSpoolingPolicy(false);
         createProducerAndSendMessages(NUM_TO_SEND / 2);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
+        final QueueViewMBean proxy = getProxyToQueueViewMBean();
         createConsumer();
-        long start = System.currentTimeMillis();
+        final long start = System.currentTimeMillis();
         ExecutorService service = Executors.newFixedThreadPool(1);
         try {
             LOG.info("purging..");
