@@ -16,19 +16,20 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.thread.SchedulerTimerTask;
+import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.usage.SystemUsage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -60,12 +61,12 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         this.purgeTime = broker.getBrokerService().getTimeBeforePurgeTempDestinations();
         if (this.doCacheTempDestinations) {
             this.purgeTimer = new Timer("ActiveMQ Temp destination purge timer", true);
-            this.purgeTask = new TimerTask() {
+            this.purgeTask = new SchedulerTimerTask(new Runnable() {
+                @Override
                 public void run() {
                     doPurge();
                 }
-    
-            };
+            }, LOG);
             this.purgeTimer.schedule(purgeTask, purgeTime, purgeTime);
         }
        

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.thread;
 
+import org.slf4j.Logger;
+
 import java.util.TimerTask;
 
 /**
@@ -24,12 +26,31 @@ import java.util.TimerTask;
  */
 public class SchedulerTimerTask extends TimerTask {
     private final Runnable task;
+    private final Logger log;
 
     public SchedulerTimerTask(Runnable task) {
         this.task = task;
+        this.log = null;
+    }
+
+    public SchedulerTimerTask(Runnable task, Logger log) {
+        this.task = task;
+        this.log = log;
     }
 
     public void run() {
-        this.task.run();                         
+        try {
+            this.task.run();
+        } catch (Throwable t) {
+            try {
+                if (log != null) {
+                    log.error("Exception in scheduled timer task", t);
+                } else {
+                    t.printStackTrace();
+                }
+            } catch (Throwable t2) {
+                //not much to do...
+            }
+        }
     }
 }

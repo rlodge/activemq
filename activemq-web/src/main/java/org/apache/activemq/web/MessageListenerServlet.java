@@ -16,16 +16,13 @@
  */
 package org.apache.activemq.web;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import org.apache.activemq.MessageAvailableConsumer;
+import org.apache.activemq.thread.SchedulerTimerTask;
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationListener;
+import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -38,13 +35,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.apache.activemq.MessageAvailableConsumer;
-import org.eclipse.jetty.continuation.Continuation;
-import org.eclipse.jetty.continuation.ContinuationListener;
-import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -504,32 +503,38 @@ public class MessageListenerServlet extends MessageServletSupport {
     /*
      * an instance of this class runs every minute (started in init), to clean up old web clients & free resources.
      */
-    private class ClientCleaner extends TimerTask {
-        @Override
-        public void run() {
-            if( LOG.isDebugEnabled() ) {
-                LOG.debug( "Cleaning up expired web clients." );
-            }
+    private class ClientCleaner extends SchedulerTimerTask {
 
-            synchronized( ajaxWebClients ) {
-                Iterator<Map.Entry<String, AjaxWebClient>> it = ajaxWebClients.entrySet().iterator();
-                while ( it.hasNext() ) {
-                    Map.Entry<String,AjaxWebClient> e = it.next();
-                    String key = e.getKey();
-                    AjaxWebClient val = e.getValue();
-                    if ( LOG.isDebugEnabled() ) {
-                        LOG.debug( "AjaxWebClient " + key + " last accessed " + val.getMillisSinceLastAccessed()/1000 + " seconds ago." );
+        public ClientCleaner() {
+            super(new Runnable() {
+                @Override
+                public void run() {
+                    if( LOG.isDebugEnabled() ) {
+                        LOG.debug( "Cleaning up expired web clients." );
                     }
-                    // close an expired client and remove it from the ajaxWebClients hash.
-                    if( val.closeIfExpired() ) {
-                        if ( LOG.isDebugEnabled() ) {
-                            LOG.debug( "Removing expired AjaxWebClient " + key );
+
+                    synchronized( ajaxWebClients ) {
+                        Iterator<Map.Entry<String, AjaxWebClient>> it = ajaxWebClients.entrySet().iterator();
+                        while ( it.hasNext() ) {
+                            Map.Entry<String,AjaxWebClient> e = it.next();
+                            String key = e.getKey();
+                            AjaxWebClient val = e.getValue();
+                            if ( LOG.isDebugEnabled() ) {
+                                LOG.debug( "AjaxWebClient " + key + " last accessed " + val.getMillisSinceLastAccessed()/1000 + " seconds ago." );
+                            }
+                            // close an expired client and remove it from the ajaxWebClients hash.
+                            if( val.closeIfExpired() ) {
+                                if ( LOG.isDebugEnabled() ) {
+                                    LOG.debug( "Removing expired AjaxWebClient " + key );
+                                }
+                                it.remove();
+                            }
                         }
-                        it.remove();
                     }
                 }
-            }
+            }, LOG);
         }
+
     }
 
     @Override

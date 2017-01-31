@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.store.kahadb.disk.util;
 
+import org.apache.activemq.thread.SchedulerTimerTask;
+
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
